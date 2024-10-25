@@ -1,185 +1,42 @@
-#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS // 보안 경고를 무시하기 위한 매크로 정의
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <malloc.h> // malloc, free 함수 사용을 위한 헤더 파일
+#include <string.h> // 문자열 처리 함수 사용을 위한 헤더 파일
 
-// '+' 출력을 위한 변수
-int chk_900, chk_400, chk_500, chk_90, chk_40, chk_50, chk_9, chk_4, chk_5;
+void main() // 메인 함수의 시작
+{
+    char* p[3]; // 문자열을 저장할 포인터 배열 (3개의 문자열 저장)
+    char imsi[100]; // 사용자 입력을 임시로 저장할 배열
+    int i, size; // 반복문 카운터 및 문자열 크기 저장 변수
+    int size_hap = 0; // 두 문자열의 총 길이를 저장할 변수
 
-int main() {
-	int num = 0;
-    int cnt = 0;
-	scanf("%d", &num);
+    // 사용자로부터 2개의 문자열 입력받기
+    for (i = 0; i < 2; i++) {
+        printf("%d 번째 문자열 : ", i + 1); // 사용자에게 문자열 입력 요청
+        gets(imsi); // 입력된 문자열을 imsi 배열에 저장 (gets는 안전하지 않으므로 주의 필요)
 
-    // 가능한 최대 문자열 수를 미리 할당후 아래에서 다시 문자열 크기 만큼 재할당
-    char* ans = (char*)malloc(sizeof(char) * 13);
-    // 쓰레기값 방지를 위한 초기화
-    memset(ans, ' \0', sizeof(char) * 13);
-    printf("%d = ", num);
+        size = strlen(imsi); // 입력된 문자열의 길이를 계산
+        p[i] = (char*)malloc((sizeof(char) * size) + 1); // 동적 메모리 할당 (문자열 길이 + 1 (null terminator))
 
-    /*
-    900이나 400일때 예외 처리
-
-    500 이상이면 D
-
-    100 이상일 동안 C
-
-    90이나 40일때 예외 처리
-
-    50 이상이면 L
-
-    10 이상일 동안 X를 더함
-
-    9나 4일때 예외 처리
-
-    5 이면 V
-
-    1 이상일 동안 I
-    */
-
-    if (num >= 900) {
-        printf("900");
-        num -= 900;
-
-        ans[cnt] = 'C'; 
-        cnt++;
-        ans[cnt] = 'M';
-        cnt++;
-        chk_900 = 1;
+        strcpy(p[i], imsi); // imsi의 내용을 동적으로 할당한 메모리(p[i])에 복사
+        size_hap += size; // 문자열 길이를 size_hap에 누적
     }
-    if (chk_900 && num) printf(" + ");
 
-    else if (num >= 400 && num < 500) {
-        printf("400");
-        num -= 400;
+    // 총 길이에 맞게 세 번째 문자열을 위한 메모리 할당
+    p[2] = (char*)malloc((sizeof(char) * size_hap) + 1); // 두 문자열의 총 길이에 맞는 메모리 할당
 
-        ans[cnt] = 'C';
-        cnt++;
-        ans[cnt] = 'D';
-        cnt++;
-        chk_400 = 1;
+    // 두 문자열을 결합하여 p[2]에 저장
+    strcpy(p[2], p[0]); // 첫 번째 문자열을 p[2]에 복사
+    strcat(p[2], p[1]); // 두 번째 문자열을 p[2]에 결합
+
+    // 결과 출력
+    printf("\n -- 입력과 합쳐진 문자열 출력(포인터)--\n");
+    for (i = 0; i < 3; i++) {
+        printf(" %d : %s\n", i + 1, p[i]); // 각 문자열 출력
     }
-    if (chk_400 && num) printf(" + ");
 
-    if (num >= 500) {
-        printf("500");
-        num -= 500;
-
-        ans[cnt] = 'D';
-        cnt++;
-        chk_500 = 1;
+    // 동적으로 할당된 메모리 해제
+    for (i = 0; i < 3; i++) {
+        free(p[i]); // 각 문자열에 대해 할당된 메모리 해제
     }
-    if (chk_500 && num) printf(" + ");
-
-    int cnt_100 = 0;
-    while (num >= 100) {
-        num -= 100;
-
-        ans[cnt] = 'C';
-        cnt++;
-        cnt_100++;
-    }
-    if (cnt_100) printf("%d", 100 * cnt_100);
-    if(cnt_100 && num) printf(" + ");
-
-    if (num >= 90) {
-        printf("90");
-        num -= 90;
-
-        ans[cnt] = 'X';
-        cnt++;
-        ans[cnt] = 'C';
-        cnt++;
-        chk_90 = 1;
-    }
-    if (chk_90 && num) printf(" + ");
-
-    else if (num >= 40 && num < 50) {
-        printf("40");
-        num -= 40;
-
-        ans[cnt] = 'X';
-        cnt++;
-        ans[cnt] = 'L';
-        cnt++;
-        chk_40 = 1;
-    }
-    if (chk_40 && num) printf(" + ");
-
-    if (num >= 50) {
-        printf("50");
-        num -= 50;
-
-        ans[cnt] = 'L';
-        cnt++;
-        chk_50 = 1;
-    }
-    if (chk_50 && num) printf(" + ");
-
-    int cnt_10 = 0;
-    while (num >= 10) {
-        num -= 10;
-
-        ans[cnt] = 'X';
-        cnt++;
-        cnt_10++;
-    }
-    if (cnt_10) printf("%d", 10 * cnt_10);
-    if (cnt_10 && num) printf(" + ");
-
-    if (num == 9) {
-        printf("9");
-        num -= 9;
-
-        ans[cnt] = 'I';
-        cnt++;
-        ans[cnt] = 'X';
-        cnt++;
-        chk_9 = 1;
-    }
-    if (chk_9 && num) printf(" + ");
-
-    else if (num == 4) {
-        printf("4");
-        num -= 4;
-
-        ans[cnt] = 'I';
-        cnt++;
-        ans[cnt] = 'V';
-        cnt++;
-        chk_4 = 1;
-    }
-    if (chk_4 && num) printf(" + ");
-
-    if (num >= 5) {
-        printf("5");
-        num -= 5;
-
-        ans[cnt] = 'V';
-        cnt++;
-        chk_5 = 1;
-    }
-    if (chk_5 && num) printf(" + ");
-
-    int cnt_1 = 0;
-    while (num >= 1) {
-        num--;
-
-        ans[cnt] = 'I';
-        cnt++;
-        cnt_1++;
-    }    
-    if (cnt_1) printf("%d", 1 * cnt_1);
-    if (cnt_1 && num) printf(" + ");
-
-    // 메모리 문자열 크기 만큼 재할당
-    ans = realloc(ans, sizeof(char) * (cnt + 1));
-    int len = _msize(ans);
-    
-    printf(" = %s, ", ans);
-    printf("%d", len - 1);
-
-    free(ans);
-
-	return 0;
 }

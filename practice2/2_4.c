@@ -1,129 +1,57 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
-#include <stdbool.h>
-#include <math.h> // ceil 함수 사용을 위한 헤더
 
-bool rooms[8] = { false };  // 호텔 객실 상태 (false: 예약 가능, true: 예약 불가)
-
-// VIP룸 예약 확인 함수
-int vip_check(int people) {
-    int rooms_needed = (int)ceil((double)people / 4);  // 필요한 VIP룸 수
-    int count = 0;  // 예약된 VIP룸 수
-    int allocated_rooms[3] = { 0 };  // 예약된 방 번호 저장
-
-    for (int i = 0; i < 3; i++) {
-        if (!rooms[i]) {  // 예약 가능 여부 확인
-            rooms[i] = true;  // 예약 상태 변경
-            allocated_rooms[count] = 301 + i;  // 예약된 방 번호 저장
-            count++;  // 예약된 VIP룸 수 증가
-            if (count == rooms_needed) {
-                printf("예약이 완료되었습니다. 방 번호: ");
-                for (int j = 0; j < count; j++) {
-                    printf("%d ", allocated_rooms[j]);
-                }
-                printf("\n");
-                return count;  // VIP룸 예약 완료
+// 에라토스테네스의 체 방식으로 소수를 걸러내는 함수
+void my_eratosthenes(int arr[], int size) {
+    int a, b;  // 2부터 size+1까지 탐색하기 위한 변수 선언
+    for (a = 2; a <= size + 1; a++) {  // 배열의 값이 2부터 시작하므로 a는 2부터 시작
+        if (arr[a - 2] != 0) {  // 소수일 경우
+            // a의 배수들을 배열에서 0으로 설정
+            for (b = a + a; b <= size + 1; b += a) {
+                arr[b - 2] = 0;  // a의 배수를 0으로 변환
             }
         }
     }
-
-    // 방이 남아있으나 예약 인원이 모두 수용되지 않는 경우
-    if (count > 0) {
-        printf("예약이 완료되었습니다. 방 번호: ");
-        for (int j = 0; j < count; j++) {
-            printf("%d ", allocated_rooms[j]);
-        }
-        printf("\n");
-        printf("%d명은 예약할 수 없습니다.\n", people - (count * 4));  // 예약되지 못한 인원 수
-    }
-
-    return count > 0 ? count : 0;  // 추가로 예약이 불가능한 경우, 중복 메시지 방지
 }
 
-// 일반룸 예약 확인 함수
-int normal_check(int people) {
-    int rooms_needed = (int)ceil((double)people / 2);  // 필요한 일반룸 수
-    int count = 0;  // 예약된 일반룸 수
-    int allocated_rooms[5] = { 0 };  // 예약된 방 번호 저장
-
-    for (int i = 3; i < 8; i++) {
-        if (!rooms[i]) {  // 예약 가능 여부 확인
-            rooms[i] = true;  // 예약 상태 변경
-            allocated_rooms[count] = 201 + (i - 3);  // 예약된 방 번호 저장
-            count++;  // 예약된 일반룸 수 증가
-            if (count == rooms_needed) {
-                printf("예약이 완료되었습니다. 방 번호: ");
-                for (int j = 0; j < count; j++) {
-                    printf("%d ", allocated_rooms[j]);
-                }
-                printf("\n");
-                return count;  // 일반룸 예약 완료
-            }
-        }
+// 배열의 값을 출력하는 함수
+void print_array(int arr[], int size) {
+    for (int i = 0; i < size; i++) {
+        printf("%d ", arr[i]);
     }
-
-    // 방이 남아있으나 예약 인원이 모두 수용되지 않는 경우
-    if (count > 0) {
-        printf("예약이 완료되었습니다. 방 번호: ");
-        for (int j = 0; j < count; j++) {
-            printf("%d ", allocated_rooms[j]);
-        }
-        printf("\n");
-        printf("%d명은 예약할 수 없습니다.\n", people - (count * 2));  // 예약되지 못한 인원 수
-    }
-
-    return count > 0 ? count : 0;  // 추가로 예약이 불가능한 경우, 중복 메시지 방지
+    printf("\n");
 }
 
-// 호텔 예약 함수
-int reservation_hotel(int people, int room_type) {
-    if (room_type == 1) {  // VIP룸 선택
-        return vip_check(people);
+// 배열 내 소수만 출력하는 함수
+void print_only_primes(int arr[], int size) {
+    for (int i = 0; i < size; i++) {
+        if (arr[i] != 0) {
+            printf("%d ", arr[i]);  // 0이 아닌 값(소수)만 출력
+        }
     }
-    else {  // 일반룸 선택
-        return normal_check(people);
-    }
+    printf("\n");
 }
 
 int main() {
-    int people, room_type;
+    int arr[29];  // 2부터 30까지 저장할 배열
+    int size = sizeof(arr) / sizeof(arr[0]);  // 배열 크기 계산
 
-    // 5번의 예약 요청 받기
-    for (int i = 0; i < 5; i++) {
-        printf("예약 인원을 입력하세요 : ");
-        scanf("%d", &people);
-
-        if (people <= 0) {
-            printf("0명 이하로 예약할 수 없습니다.\n");
-            i--;  // 유효한 입력이 들어올 때까지 반복
-            continue;
-        }
-
-        printf("방 타입을 선택하세요 (1: VIP룸, 2: 일반룸): ");
-        scanf("%d", &room_type);
-
-        if (room_type < 1 || room_type > 2) {
-            printf("1 또는 2를 입력하세요.\n");
-            i--;  // 유효한 입력이 들어올 때까지 반복
-            continue;
-        }
-
-        int reserved_rooms = reservation_hotel(people, room_type);
-        if (reserved_rooms == 0 && people > 0) {
-            printf("예약이 불가능합니다.\n");
-        }
+    // 배열에 2~30 사이의 값 채우기
+    for (int i = 0; i < size; i++) {
+        arr[i] = i + 2;
     }
 
-    // 최종 객실 현황 출력
-    printf("\n현재 객실 현황:\n");
-    for (int i = 0; i < 8; i++) {
-        if (rooms[i]) {
-            printf("%d호: 예약 완료\n", (i < 3 ? 301 + i : 201 + (i - 3)));
-        }
-        else {
-            printf("%d호: 예약 가능\n", (i < 3 ? 301 + i : 201 + (i - 3)));
-        }
-    }
+    printf("원래 배열: ");
+    print_array(arr, size);  // 원래 배열 출력
+
+    // 에라토스테네스의 체로 소수만 남기고 나머지 0으로 변경
+    my_eratosthenes(arr, size);
+
+    printf("소수를 제외한 값은 0으로 변환된 배열: ");
+    print_array(arr, size);  // 0으로 변환된 배열 출력
+
+    printf("소수만 출력: ");
+    print_only_primes(arr, size);  // 소수만 출력
 
     return 0;
 }

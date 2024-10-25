@@ -1,42 +1,129 @@
-#define _CRT_SECURE_NO_WARNINGS // 보안 경고를 무시하기 위한 매크로 정의
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
-#include <malloc.h> // malloc, free 함수 사용을 위한 헤더 파일
-#include <string.h> // 문자열 처리 함수 사용을 위한 헤더 파일
+#include <stdbool.h>
+#include <math.h> // ceil 함수 사용을 위한 헤더
 
-void main() // 메인 함수의 시작
-{
-    char* p[3]; // 문자열을 저장할 포인터 배열 (3개의 문자열 저장)
-    char imsi[100]; // 사용자 입력을 임시로 저장할 배열
-    int i, size; // 반복문 카운터 및 문자열 크기 저장 변수
-    int size_hap = 0; // 두 문자열의 총 길이를 저장할 변수
+bool rooms[8] = { false };  // 호텔 객실 상태 (false: 예약 가능, true: 예약 불가)
 
-    // 사용자로부터 2개의 문자열 입력받기
-    for (i = 0; i < 2; i++) {
-        printf("%d 번째 문자열 : ", i + 1); // 사용자에게 문자열 입력 요청
-        gets(imsi); // 입력된 문자열을 imsi 배열에 저장 (gets는 안전하지 않으므로 주의 필요)
+// VIP룸 예약 확인 함수
+int vip_check(int people) {
+    int rooms_needed = (int)ceil((double)people / 4);  // 필요한 VIP룸 수
+    int count = 0;  // 예약된 VIP룸 수
+    int allocated_rooms[3] = { 0 };  // 예약된 방 번호 저장
 
-        size = strlen(imsi); // 입력된 문자열의 길이를 계산
-        p[i] = (char*)malloc((sizeof(char) * size) + 1); // 동적 메모리 할당 (문자열 길이 + 1 (null terminator))
-
-        strcpy(p[i], imsi); // imsi의 내용을 동적으로 할당한 메모리(p[i])에 복사
-        size_hap += size; // 문자열 길이를 size_hap에 누적
+    for (int i = 0; i < 3; i++) {
+        if (!rooms[i]) {  // 예약 가능 여부 확인
+            rooms[i] = true;  // 예약 상태 변경
+            allocated_rooms[count] = 301 + i;  // 예약된 방 번호 저장
+            count++;  // 예약된 VIP룸 수 증가
+            if (count == rooms_needed) {
+                printf("예약이 완료되었습니다. 방 번호: ");
+                for (int j = 0; j < count; j++) {
+                    printf("%d ", allocated_rooms[j]);
+                }
+                printf("\n");
+                return count;  // VIP룸 예약 완료
+            }
+        }
     }
 
-    // 총 길이에 맞게 세 번째 문자열을 위한 메모리 할당
-    p[2] = (char*)malloc((sizeof(char) * size_hap) + 1); // 두 문자열의 총 길이에 맞는 메모리 할당
-
-    // 두 문자열을 결합하여 p[2]에 저장
-    strcpy(p[2], p[0]); // 첫 번째 문자열을 p[2]에 복사
-    strcat(p[2], p[1]); // 두 번째 문자열을 p[2]에 결합
-
-    // 결과 출력
-    printf("\n -- 입력과 합쳐진 문자열 출력(포인터)--\n");
-    for (i = 0; i < 3; i++) {
-        printf(" %d : %s\n", i + 1, p[i]); // 각 문자열 출력
+    // 방이 남아있으나 예약 인원이 모두 수용되지 않는 경우
+    if (count > 0) {
+        printf("예약이 완료되었습니다. 방 번호: ");
+        for (int j = 0; j < count; j++) {
+            printf("%d ", allocated_rooms[j]);
+        }
+        printf("\n");
+        printf("%d명은 예약할 수 없습니다.\n", people - (count * 4));  // 예약되지 못한 인원 수
     }
 
-    // 동적으로 할당된 메모리 해제
-    for (i = 0; i < 3; i++) {
-        free(p[i]); // 각 문자열에 대해 할당된 메모리 해제
+    return count > 0 ? count : 0;  // 추가로 예약이 불가능한 경우, 중복 메시지 방지
+}
+
+// 일반룸 예약 확인 함수
+int normal_check(int people) {
+    int rooms_needed = (int)ceil((double)people / 2);  // 필요한 일반룸 수
+    int count = 0;  // 예약된 일반룸 수
+    int allocated_rooms[5] = { 0 };  // 예약된 방 번호 저장
+
+    for (int i = 3; i < 8; i++) {
+        if (!rooms[i]) {  // 예약 가능 여부 확인
+            rooms[i] = true;  // 예약 상태 변경
+            allocated_rooms[count] = 201 + (i - 3);  // 예약된 방 번호 저장
+            count++;  // 예약된 일반룸 수 증가
+            if (count == rooms_needed) {
+                printf("예약이 완료되었습니다. 방 번호: ");
+                for (int j = 0; j < count; j++) {
+                    printf("%d ", allocated_rooms[j]);
+                }
+                printf("\n");
+                return count;  // 일반룸 예약 완료
+            }
+        }
     }
+
+    // 방이 남아있으나 예약 인원이 모두 수용되지 않는 경우
+    if (count > 0) {
+        printf("예약이 완료되었습니다. 방 번호: ");
+        for (int j = 0; j < count; j++) {
+            printf("%d ", allocated_rooms[j]);
+        }
+        printf("\n");
+        printf("%d명은 예약할 수 없습니다.\n", people - (count * 2));  // 예약되지 못한 인원 수
+    }
+
+    return count > 0 ? count : 0;  // 추가로 예약이 불가능한 경우, 중복 메시지 방지
+}
+
+// 호텔 예약 함수
+int reservation_hotel(int people, int room_type) {
+    if (room_type == 1) {  // VIP룸 선택
+        return vip_check(people);
+    }
+    else {  // 일반룸 선택
+        return normal_check(people);
+    }
+}
+
+int main() {
+    int people, room_type;
+
+    // 5번의 예약 요청 받기
+    for (int i = 0; i < 5; i++) {
+        printf("예약 인원을 입력하세요 : ");
+        scanf("%d", &people);
+
+        if (people <= 0) {
+            printf("0명 이하로 예약할 수 없습니다.\n");
+            i--;  // 유효한 입력이 들어올 때까지 반복
+            continue;
+        }
+
+        printf("방 타입을 선택하세요 (1: VIP룸, 2: 일반룸): ");
+        scanf("%d", &room_type);
+
+        if (room_type < 1 || room_type > 2) {
+            printf("1 또는 2를 입력하세요.\n");
+            i--;  // 유효한 입력이 들어올 때까지 반복
+            continue;
+        }
+
+        int reserved_rooms = reservation_hotel(people, room_type);
+        if (reserved_rooms == 0 && people > 0) {
+            printf("예약이 불가능합니다.\n");
+        }
+    }
+
+    // 최종 객실 현황 출력
+    printf("\n현재 객실 현황:\n");
+    for (int i = 0; i < 8; i++) {
+        if (rooms[i]) {
+            printf("%d호: 예약 완료\n", (i < 3 ? 301 + i : 201 + (i - 3)));
+        }
+        else {
+            printf("%d호: 예약 가능\n", (i < 3 ? 301 + i : 201 + (i - 3)));
+        }
+    }
+
+    return 0;
 }

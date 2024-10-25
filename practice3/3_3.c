@@ -1,40 +1,87 @@
-#define _CRT_SECURE_NO_WARNINGS // 보안 경고를 무시하기 위한 매크로 정의
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
-#include <malloc.h> // malloc, free 함수 사용을 위한 헤더 파일
-#include <string.h> // 문자열 처리 함수 사용을 위한 헤더 파일
 
-void main() // 메인 함수의 시작
-{
-    char* p[3]; // 문자열을 저장할 포인터 배열 (3개의 문자열 저장)
-    char imsi[100]; // 사용자 입력을 임시로 저장할 배열
-    int i, size; // 반복문 카운터 및 문자열 크기 저장 변수
-
-    // 사용자로부터 3개의 문자열 입력받기
-    for (i = 0; i < 3; i++) {
-        printf("%d 번째 문자열 : ", i + 1); // 사용자에게 문자열 입력 요청
-        gets(imsi); // 입력된 문자열을 imsi 배열에 저장 (gets는 안전하지 않으므로 주의 필요)
-
-        size = strlen(imsi); // 입력된 문자열의 길이를 계산
-        p[i] = (char*)malloc((sizeof(char) * size) + 1); // 동적 메모리 할당 (문자열 길이 + 1 (null terminator))
-
-        strcpy(p[i], imsi); // imsi의 내용을 동적으로 할당한 메모리(p[i])에 복사
-    }
-
-    printf("\n -- 입력과 반대로 출력(포인터) : 글자 순서도 거꾸로 --\n");
-
-    // 입력된 문자열을 거꾸로 출력
-    for (i = 2; i >= 0; i--) { // 역순으로 반복
-        printf(" %d : ", i + 1); // 문자열 번호 출력
-
-        // 문자열을 거꾸로 출력
-        for (int j = strlen(p[i]) - 1; j >= 0; j--) { // 문자열의 마지막 문자부터 출력
-            printf("%c", p[i][j]);
+// 좌표 평면 출력 함수
+void print_plane(int x, int y) {
+    // y축을 위에서 아래로 출력 (-2, -1, 1, 2)
+    for (int i = 2; i >= -2; i--) { // y좌표
+        // x축을 왼쪽에서 오른쪽으로 출력 (-2, -1, 1, 2)
+        for (int j = -2; j <= 2; j++) { // x좌표
+            // i 또는 j가 0이면 출력 안함
+            if (i == 0 || j == 0) {
+                continue;
+            }
+            else if (i == y && j == x) {
+                printf("X "); // 입력된 좌표에 'X' 표시
+            }
+            else {
+                printf("O "); // 나머지 부분에 'O' 표시
+            }
         }
-        printf("\n"); // 다음 줄로 이동
+        if (i == 0) {
+            continue; // i=0인 행은 줄 바꿈 안함
+        }
+        else {
+            printf("\n"); // 다른 행은 줄 바꿈
+        }
+    }
+}
+
+// X축 대칭 변환 함수
+void reflect_x(int* y) {
+    *y = -(*y); // y좌표를 반전
+}
+
+// Y축 대칭 변환 함수
+void reflect_y(int* x) {
+    *x = -(*x); // x좌표를 반전
+}
+
+// 원점 대칭 변환 함수
+void reflect_origin(int* x, int* y) {
+    *x = -(*x); // x좌표 반전
+    *y = -(*y); // y좌표 반전
+}
+
+int main() {
+    int x, y;
+    int original_x, original_y;
+
+    // 사용자로부터 좌표 입력 받기
+    printf("x좌표와 y좌표를 입력하세요 (-2, -1, 1, 2): ");
+    scanf("%d %d", &x, &y);
+
+    // 입력된 좌표가 유효한지 확인
+    while (x != -2 && x != -1 && x != 1 && x != 2) {
+        printf("유효하지 않은 x좌표입니다. (-2, -1, 1, 2) 중 하나를 입력하세요: ");
+        scanf("%d", &x);
+    }
+    while (y != -2 && y != -1 && y != 1 && y != 2) {
+        printf("유효하지 않은 y좌표입니다. (-2, -1, 1, 2) 중 하나를 입력하세요: ");
+        scanf("%d", &y);
     }
 
-    // 동적으로 할당된 메모리 해제
-    for (i = 0; i < 3; i++) {
-        free(p[i]); // 각 문자열에 대해 할당된 메모리 해제
-    }
+    original_x = x;  // 원래 x좌표 저장 (포인터는 값이 아예 바뀌기 때문에 original_x가 없다면 x축 대칭한 값을 다시 y축 대칭하고, 다시 원점 대칭함)
+    original_y = y;  // 원래 y좌표 저장
+
+    // 입력 좌표 평면 출력
+    printf("입력한 좌표 평면:\n");
+    print_plane(original_x, original_y);
+
+    // X축 대칭 결과 출력
+    reflect_x(&y);
+    printf("X축 대칭 결과:\n");
+    print_plane(original_x, y);
+
+    // Y축 대칭 결과 출력
+    reflect_y(&x);
+    printf("Y축 대칭 결과:\n");
+    print_plane(x, original_y);
+
+    // 원점 대칭 결과 출력
+    reflect_origin(&original_x, &original_y);
+    printf("원점 대칭 결과:\n");
+    print_plane(original_x, original_y);
+
+    return 0;
 }

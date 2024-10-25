@@ -1,37 +1,50 @@
-#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS // 보안 경고를 무시하기 위한 매크로 정의
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <malloc.h> // malloc, realloc, free 함수 사용을 위한 헤더 파일
 
-int my_strcmp(char x1[], char x2[]) {
-	for (int i = 0; i < _msize(x1) - 1; ++i) {
-		// 이미 같으면 pass
-		if (x1[i] == x2[i]) continue;
-		else if (x1[i] + 32 == x2[i] || x1[i] - 32 == x2[i]) continue; // x2를 기준으로 두고 x1를 대문자 / 소문자로 바꿔서 비교
-		else if (x1[i] == x2[i] + 32 || x1[i] == x2[i] - 32) continue; // x1를 기준으로 두고 x2를 대문자 / 소문자로 바꿔서 비교
-		else return 0;
-	}
-	return 1;
-}
+void main() // 메인 함수의 시작
+{
+    int* p; // 정수형 포인터 선언 (동적 할당된 배열의 포인터)
+    int i, hap = 0; // 반복문 카운터 및 짝수의 합을 저장할 변수
+    int cnt = 0; // 입력된 숫자의 개수를 저장할 변수
+    int data; // 사용자로부터 입력받을 숫자를 저장할 변수
 
-int main() {
-	char buffer[100] = " ";
-	char *x1 = NULL;
-	char *x2 = NULL;
+    // 초기 메모리 할당: 1개의 정수를 저장할 수 있는 메모리 블록 요청
+    p = (int*)malloc(sizeof(int) * 1); 
+    printf("1 번째 숫자 : "); // 사용자에게 첫 번째 숫자 입력 요청
+    scanf("%d", &p[0]); // 입력된 숫자를 배열의 첫 번째 요소에 저장
+    
+    // 사용자가 0을 입력하면 프로그램 종료
+    if (p[0] == 0) { // 첫 번째 입력이 0인지 확인
+        printf("0을 입력하여 프로그램을 마무리합니다."); // 종료 메시지 출력
+        return; // 프로그램 종료
+    }
+    cnt++; // 입력된 숫자 개수 증가
 
-	scanf("%s", buffer);
-	x1 = (char*)malloc(sizeof(char) * (strlen(buffer) + 1));
-	strcpy(x1, buffer);
+    // 사용자로부터 숫자를 반복해서 입력받는 루프
+    for (i = 2; ; i++) { // i는 2부터 시작, 무한 루프
+        printf("%d 번째 숫자 : ", i); // 사용자에게 다음 숫자 입력 요청
+        scanf("%d", &data); // 입력된 숫자를 data에 저장
 
-	scanf("%s", buffer);
-	x2 = (char*)malloc(sizeof(char) * (strlen(buffer) + 1));
-	strcpy(x2, buffer);
+        // 사용자가 0이 아닌 숫자를 입력했을 때만 메모리 재할당
+        if (data != 0) // 입력된 값이 0이 아닌 경우
+            p = (int*)realloc(p, sizeof(int) * i); // p의 메모리 크기를 i개의 정수를 수용할 수 있도록 재할당
+        else
+            break; // 0이 입력되면 반복문 종료
 
-	if (my_strcmp(x1, x2)) printf("True");
-	else printf("False");
+        p[i - 1] = data; // 입력된 값을 배열에 저장 (i-1 인덱스에 저장)
+        cnt++; // 입력된 숫자 개수 증가
+    }
 
-	free(x1);
-	free(x2);
+    // 입력된 숫자 중 짝수의 합을 구함
+    for (i = 0; i < cnt; i++) {
+        if (*(p + i) % 2 == 0) { // 현재 숫자가 짝수인지 확인
+            hap = hap + *(p + i); // 짝수이면 hap에 더함
+        }
+    }
 
-	return 0;
+    // 결과 출력
+    printf("입력 숫자 합 ==> %d \n", hap); // 짝수의 합을 출력
+
+    free(p); // 동적 할당된 메모리 해제 (메모리 누수 방지)
 }

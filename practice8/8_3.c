@@ -1,101 +1,90 @@
 #define _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_MENU_LENGTH 20 // 메뉴 이름 최대 길이
+// 학생 성적 정보를 담을 구조체
+struct student {
+    char name[20];  // 학생 이름
+    int kor;        // 국어 점수
+    int eng;        // 영어 점수
+};
 
-// 메뉴와 가격을 출력하는 함수
-void printMenu(char** names, int* prices, int size) {
-    printf(" [   MENU             PRICE]\n");
-    for (int i = 0; i < size; i++) {
-        printf(" [%d] %-14s : %5d\n", i + 1, names[i], prices[i]);
-    }
-}
+// 결과 정보를 담을 구조체
+struct result {
+    float avg;       // 각 학생들의 평균 점수
+    float kor_avg;   // 국어 과목 평균 점수
+    float eng_avg;   // 영어 과목 평균 점수
+    float total_avg; // 모든 학생들의 총 평균 점수
+};
 
 int main() {
-    FILE* file = fopen("menu.txt", "r"); // menu.txt 파일을 읽기 모드로 열기
+    int n;
+    printf("학생 수를 입력하세요 : ");
+    scanf("%d", &n);
+
+    // 학생 정보 동적 할당 (포인터 사용)
+    struct student* students = (struct student*)malloc(n * sizeof(struct student));
+    if (students == NULL) {
+        printf("메모리 할당 실패!\n");
+        return 1;
+    }
+
+    // 각 학생의 성적 입력
+    for (int i = 0; i < n; i++) {
+        struct student* s = &students[i];  // 학생 포인터
+
+        printf("\n학생 %d의 정보를 입력하세요\n", i + 1);
+        printf("이름: ");
+        scanf("%s", s->name);
+        printf("국어 점수: ");
+        scanf("%d", &s->kor);
+        printf("영어 점수: ");
+        scanf("%d", &s->eng);
+    }
+
+    // 파일 열기 (쓰기 모드)
+    FILE* file = fopen("average_student.txt", "w");
     if (file == NULL) {
-        perror("파일을 열 수 없습니다.");
-        return 0;
+        printf("파일 열기 실패!\n");
+        free(students);
+        return 1;
     }
 
-    int menuSize = 0; // 현재 메뉴 개수
-    int capacity = 5; // 동적 배열의 초기 용량
-    char** names = (char**)malloc(capacity * sizeof(char*)); // 메뉴 이름을 저장할 배열 동적 할당
-    int* prices = (int*)malloc(capacity * sizeof(int)); // 메뉴 가격을 저장할 배열 동적 할당
+    // 각 과목별 평균 점수, 학생별 평균 점수 및 전체 평균 점수 계산
+    struct result result_data = { 0 };  // 결과 정보를 담을 구조체 초기화
+    float total_kor = 0, total_eng = 0, total_avg = 0;
 
-    if (names == NULL || prices == NULL) {
-        perror("메모리 할당 실패");
-        fclose(file);
-        return 0;
+    for (int i = 0; i < n; i++) {
+        struct student* s = &students[i];  // 학생 포인터
+
+        float avg = (s->kor + s->eng) / 2.0;
+        total_kor += s->kor;
+        total_eng += s->eng;
+        total_avg += avg;
+
+        // 학생 정보를 파일에 기록
+        fprintf(file, "%s의 평균 점수: %.2f\n", s->name, avg);
+        fprintf(file, "국어 점수: %d, 영어 점수: %d\n\n", s->kor, s->eng);
     }
 
-    char buffer[MAX_MENU_LENGTH]; // 메뉴 이름을 임시로 저장할 버퍼
-    int price;
+    result_data.kor_avg = total_kor / n;
+    result_data.eng_avg = total_eng / n;
+    result_data.total_avg = total_avg / n;
 
-    // menu.txt 파일에서 메뉴와 가격을 읽어와서 배열에 저장
-    while (fscanf(file, "%[^:]:%d\n", buffer, &price) == 2) {
-        if (menuSize >= capacity) {
-            // 용량이 부족하면 두 배로 확장
-            capacity *= 2;
-            names = (char**)realloc(names, capacity * sizeof(char*));
-            prices = (int*)realloc(prices, capacity * sizeof(int));
-            if (names == NULL || prices == NULL) {
-                perror("메모리 재할당 실패");
-                fclose(file);
-                return 0;
-            }
-        }
+    // 과목별 평균 점수와 전체 평균 점수 파일에 기록
+    fprintf(file, "\n과목별 평균 점수\n");
+    fprintf(file, "국어 평균: %.2f\n", result_data.kor_avg);
+    fprintf(file, "영어 평균: %.2f\n", result_data.eng_avg);
+    fprintf(file, "전체 학생들의 평균 점수: %.2f\n", result_data.total_avg);
 
-        // 메뉴 이름을 동적 할당하여 배열에 저장
-        names[menuSize] = (char*)malloc((strlen(buffer) + 1) * sizeof(char));
-        if (names[menuSize] == NULL) {
-            perror("메모리 할당 실패");
-            fclose(file);
-            return 0;
-        }
-        strcpy(names[menuSize], buffer); // 메뉴 이름 복사
-        prices[menuSize] = price; // 가격 저장
-        menuSize++;
-    }
-
-    fclose(file); // 파일 닫기
-
-    // 메뉴 출력
-    printMenu(names, prices, menuSize);
-
-    int choice = 0; // 사용자가 선택한 메뉴 번호
-    int menu_cnt[20] = { 0, }; // 각 메뉴의 주문 개수를 저장할 배열
-
-    // 주문 입력 받기
-    while (1) {
-        printf("메뉴를 고르세요. 주문 완료는 0을 누르세요 : ");
-        scanf("%d", &choice);
-        if (choice == 0) break; // 0을 입력하면 주문 종료
-        printf("%s 주문 받았습니다.\n", names[choice - 1]);
-        menu_cnt[choice - 1]++; // 선택한 메뉴의 주문 개수 증가
-    }
-
-    int total = 0; // 총 결제 금액
-    FILE* result = fopen("receipt.txt", "w+"); // 영수증 파일 작성
-    for (int i = 0; i < menuSize; ++i) {
-        if (menu_cnt[i]) {
-            total += menu_cnt[i] * prices[i]; // 총 결제 금액 계산
-            fprintf(result, "%s : %d\n", names[i], prices[i]); // 메뉴와 가격을 영수증에 기록
-        }
-    }
-
-    fprintf(result, "결제 금액 : %d", total); // 총 결제 금액 기록
+    // 파일 닫기
+    fclose(file);
 
     // 동적 할당 해제
-    for (int i = 0; i < menuSize; i++) {
-        free(names[i]);
-    }
-    free(names);
-    free(prices);
+    free(students);
+
+    printf("결과가 'average_student.txt'에 저장되었습니다.\n");
 
     return 0;
 }
-
